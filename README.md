@@ -9,7 +9,7 @@ on the idea that our viability assays employ Hoescht33342 (DAPI), which should p
 all cells, and SYTOX Green (FITC), which should only permeate dead cells. Cell
 viability in this case can be represented as fractional viability:
 
-$$ Viability = \frac{Total - Dead}{Total $$
+$$ Viability = \frac{Total - Dead}{Total} $$
 $$ Viability = \frac{DAPI - FITC}{DAPI} $$ 
 
 2. Return two CSV files, one per fluorescence channel, which can then be merged
@@ -42,7 +42,7 @@ instructions](./install.md) or use the [StarDist provided installation](https://
 Please provide credit to the authors of the original StarDist program. 
 The original StarDist can be found here: [https://github.com/stardist/stardist/tree/main](https://github.com/stardist/stardist/tree/main)
 
-'''
+```
 @inproceedings{schmidt2018,
   author    = {Uwe Schmidt and Martin Weigert and Coleman Broaddus and Gene Myers},
   title     = {Cell Detection with Star-Convex Polygons},
@@ -69,4 +69,4 @@ The original StarDist can be found here: [https://github.com/stardist/stardist/t
   year      = {2022},
   doi       = {10.1109/ISBIC56247.2022.9854534}
 }
-'''
+```

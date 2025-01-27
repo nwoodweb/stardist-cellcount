@@ -1,8 +1,7 @@
 ::: {#title-block-header}
 # Installing the StarDist Script {#installing-the-stardist-script .title}
 
-Nathan Wood
-:::
+Nathan Wood 2025
 
 # Citing StarDist
 
@@ -46,10 +45,9 @@ included.
 1.  Open Powershell by looking for it in the Windows Start Menu
 2.  Run the following command:
 
-```{=html}
-<!-- -->
 ```
     wsl --install 
+```
 
 Follow all instructions given, and write down both the user and root
 passwords.
@@ -62,10 +60,9 @@ recently approved Ubuntu distribution.
 1.  WSL2 creates a separate Ubuntu related file hierarchy. The Windows
     C: or D: drives are located under the partition:
 
-```{=html}
-<!-- -->
 ```
     /mnt/<drivename>
+```
 
 where all of the files associated with your Windows OS are located.
 
@@ -73,15 +70,16 @@ where all of the files associated with your Windows OS are located.
     your relevant Windows directories to corresponding Ubuntu
     directories. An example is included below
 
-```{=html}
-<!-- -->
+
 ```
     cd ~/
     ln -s ../mnt/<drive>/<desired windows directory> ./<desired linux directory>
-
+```
 This can be confirmed by using:
 
+```
     ls ./<desired linux directory>
+```
 
 in which the contents of the corresponding Windows directory should be
 shown.
@@ -94,12 +92,16 @@ shown.
 Git is a software version control system. It may be already installed on
 Ubuntu for WSL2. To confirm this, run the command:
 
+```
     git -v
+```
 
 if an error is returned, you will need to install git using Ubuntu's
 software package manager, Aptitude.
 
+```
     sudo apt install git
+```
 
 If the command mentions " Not in sudoers file", this can be circumvented
 by using `su` , entering the root password, then entering the above
@@ -107,7 +109,9 @@ command.
 
 To add user to sudoers, while as root, enter the command
 
+```
     adduser <username> sudo
+```
 
 you may need to use `/sbin/adduser` instead.
 
@@ -116,11 +120,15 @@ you may need to use `/sbin/adduser` instead.
 Python 3 is often already installed on most Linux systems. To confirm
 this, enter the command
 
+```
     python -V
+```
 
 You will likely need to install `pip` if not already installed:
 
+```
     sudo apt install python3-pip
+```
 
 If Python 3 is not installed, entering the above command will install it
 as a prerequsite.
@@ -130,12 +138,16 @@ as a prerequsite.
 Curl is a utility that pulls down web content. To make sure curl is
 installed to the system, run the following command:
 
+```
     curl -V
+```
 
 An output should be given, if an error is returned, run this command to
 install it.
 
+```
     sudo apt install curl
+```
 
 ## Prerequisite: Installing MiniConda for WSL2
 
@@ -205,11 +217,11 @@ To see if your Nvidia card is compatible, please check
 2.  Create the required conda environment via the following conda
     command:
 
-```{=html}
-<!-- -->
+
 ```
     conda env create -f \
     https://raw.githubusercontent.com/CSBDeep/CSBDeep/main/extras/environment-gpu-py3.8-tf2.4.yml
+```
 
 3.  Enter the conda environment `csbdeep` via `conda activate csbdeep`
 4.  Install stardist via `pip install stardist`
