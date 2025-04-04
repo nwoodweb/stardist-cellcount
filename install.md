@@ -1,5 +1,4 @@
-::: {#title-block-header}
-# Installing the StarDist Script {#installing-the-stardist-script .title}
+# Installing the StarDist Script 
 
 Nathan Wood 2025
 
