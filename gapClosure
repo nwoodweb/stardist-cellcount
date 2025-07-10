@@ -1,0 +1,167 @@
+require(ggplot2)
+require(dplyr)
+require(matrixStats)
+
+theme_woodn <-  theme_minimal() %+replace% theme(text=element_text(size=22),
+                                                 panel.background = element_rect(color = 'white'),
+                                                 strip.text = element_text(size = 24),
+                                                 #panel.grid.major.x = element_blank(),
+                                                 panel.grid.minor.x = element_blank(),
+                                                 axis.text.x = element_text(angle = 0,
+                                                                            vjust = 0.66))
+
+
+theme_woodn <- function(){
+  font <- "Helvetica"
+  theme_classic() %+replace%
+    theme(
+      panel.grid.major = element_line(colour='#ffffff'),
+      panel.grid.minor = element_blank(),
+      #axis.ticks = element_blank(),
+      plot.title = element_text(
+        family = font,
+        size = 32,
+        face = 'bold' 
+      ),
+      axis.title = element_text(
+        family = font,
+        size = 28,
+        face = 'bold'
+      ),
+      axis.text = element_text(
+        family = font,
+        size = 24
+      ),
+      legend.title = element_text(
+        family = font,
+        size = 28,
+        face = 'bold'
+      ),
+      legend.text = element_text(
+        family = font,
+        size = 24,
+      )
+    )
+}
+
+data <- read.csv('/home/woodn/Desktop/pHScratch-12oct/data/scratch.csv')
+data
+length(data)
+colnames(data) <- c("X","DATE","FILEPATH","PH","ITERATION","TIMEPOINT","AREA.UM2","AREA.CELL.UM2","PERCENT.WOUND","DIFF.CELLS.UM2")
+head(data)
+data <- subset(data, data$TIMEPOINT < 26)
+View(data)
+timepoints <- 0:24
+timepoints
+ph3 <- rep("pH 3",25)
+ph5 <- rep("pH 5",25)
+ph6 <- rep("pH 6",25)
+ph7 <- rep("pH 7",25)
+
+dataph3 <- subset(data, data$PH == "ph3")
+dataph3.1 <- subset(dataph3, dataph3$ITERATION == '1')
+dataph3.2 <- subset(dataph3, dataph3$ITERATION == '2')
+dataph3.3 <- subset(dataph3, dataph3$ITERATION == '3')
+
+ph3PercentCoverage <- data.frame(timepoints,ph3,dataph3.1$PERCENT.WOUND,dataph3.2$PERCENT.WOUND,dataph3.3$PERCENT.WOUND)
+ph3PercentVel <- data.frame(timepoints,ph3,dataph3.1$DIFF.CELLS.UM2,dataph3.2$DIFF.CELLS.UM2,dataph3.3$DIFF.CELLS.UM2)
+ph3PercentVel
+colnames(ph3PercentCoverage) <- c("TIMEPOINT","pH","ITER1","ITER2","ITER3")
+ph3PercentCoverage
+
+dataph5 <- subset(data, data$PH == "ph5")
+dataph5.2 <- subset(dataph5, dataph5$ITERATION == '2')
+dataph5.3 <- subset(dataph5, dataph5$ITERATION == '3')
+cover <- rep(NA,25)
+cover
+ph5PercentCoverage <- data.frame(timepoints,ph5,dataph5.2$PERCENT.WOUND,dataph5.3$PERCENT.WOUND,cover)
+ph5PercentVel <- data.frame(timepoints,ph5,dataph5.2$DIFF.CELLS.UM2,dataph5.3$DIFF.CELLS.UM2,cover)
+
+
+dataph6 <- subset(data, data$PH == "ph6")
+dataph6.1 <- subset(dataph6, dataph6$ITERATION == '1')
+dataph6.2 <- subset(dataph6, dataph6$ITERATION == '2')
+dataph6.3 <- subset(dataph6, dataph6$ITERATION == '3')
+
+ph6PercentCoverage <- data.frame(timepoints,ph6,dataph6.1$PERCENT.WOUND,dataph6.2$PERCENT.WOUND,dataph6.3$PERCENT.WOUND)
+ph6PercentVel <- data.frame(timepoints,ph6,dataph6.1$DIFF.CELLS.UM2,dataph6.2$DIFF.CELLS.UM2,dataph6.3$DIFF.CELLS.UM2)
+
+dataph7 <- subset(data, data$PH == "ph7")
+dataph7.1 <- subset(dataph7, dataph7$ITERATION == '1')
+dataph7.2 <- subset(dataph7, dataph7$ITERATION == '2')
+dataph7.3 <- subset(dataph7, dataph7$ITERATION == '3')
+
+ph7PercentCoverage <- data.frame(timepoints,ph7,dataph7.1$PERCENT.WOUND,dataph7.2$PERCENT.WOUND,dataph7.3$PERCENT.WOUND)
+ph7PercentVel <- data.frame(timepoints,ph7,dataph7.1$DIFF.CELLS.UM2,dataph7.2$DIFF.CELLS.UM2,dataph7.3$DIFF.CELLS.UM2)
+
+colnames(ph3PercentCoverage) <- c("TIMEPOINT","pH","ITER1","ITER2","ITER3")
+colnames(ph5PercentCoverage) <- c("TIMEPOINT","pH","ITER1","ITER2","ITER3")
+colnames(ph6PercentCoverage) <- c("TIMEPOINT","pH","ITER1","ITER2","ITER3")
+colnames(ph7PercentCoverage) <- c("TIMEPOINT","pH","ITER1","ITER2","ITER3")
+colnames(ph3PercentVel) <- c("TIMEPOINT","pH","ITER1","ITER2","ITER3")
+colnames(ph5PercentVel) <- c("TIMEPOINT","pH","ITER1","ITER2","ITER3")
+colnames(ph6PercentVel) <- c("TIMEPOINT","pH","ITER1","ITER2","ITER3")
+colnames(ph7PercentVel) <- c("TIMEPOINT","pH","ITER1","ITER2","ITER3")
+
+dataPlot <- rbind(ph3PercentVel,ph5PercentVel,ph6PercentVel,ph7PercentVel)
+dataPlot2 <- rbind(ph3PercentCoverage,ph5PercentCoverage,ph6PercentCoverage,ph7PercentCoverage)
+dataPlot2
+dataPlot2$mean <- rowMeans(na.rm = T,(dataPlot2[c("ITER1","ITER2","ITER3")]))
+dataPlot2$sd <- rowSds(na.rm = T, as.matrix(dataPlot2[c("ITER1","ITER2","ITER3")]))
+
+write.csv(dataPlot2,"/home/woodn/Desktop/pHScratch-12oct/dataPlot.csv")
+
+dataPlot 
+plot <- read.csv("/home/woodn/Desktop/pHScratch-12oct/dataPlot.csv")
+plot
+ggplot(data=plot) + 
+  geom_point(aes(x=TIMEPOINT,y=mean, fill = pH, shape = pH),color = 'black', size=8,stroke=1.125) + 
+  geom_ribbon(aes(x=TIMEPOINT,ymin=(mean-(sd)),ymax=(mean+(sd)), fill = pH), color='black',
+                width=0.34,stroke=2, alpha = 0.34) + 
+  geom_line(aes(x=TIMEPOINT,y=mean,colour=pH)) + 
+  #xlim(c(0,24)) + 
+  ylab("Relative Gap Size (% Viewframe)") + 
+  xlab("Time (Hours)") + 
+  ylim(c(0,100)) +
+  #scale_y_continuous(limits = c(0,100),breaks = c(0,25,50,75,100)) + 
+  scale_x_continuous(limits = c(0,25),breaks = c(0,2,4,6,8,10,12,14,16,18,20,22,24)) + 
+  scale_fill_manual(name='pHe',values = c("#FDE725","#55C667","#287D8E","#525252")) + 
+  scale_color_manual(name='pHe',values = c("#FDE725","#55C667","#287D8E","#525252")) + 
+  scale_shape_manual(name = 'pHe',values = c(21,22,23,24)) + 
+  theme_woodn()
+
+
+tail(plot)
+View(plot)
+
+wilcox.test(subset(ph7PercentVel,ph7PercentVel$TIMEPOINT == '24'),
+            subset(ph6PercentVel,ph6PercentVel$TIMEPOINT == '24'))
+ph3PercentCoverage
+ph7 <- c(20.642,9.927,10.1)
+ph6 <- c(21.871,28.108,33.036)
+ph5 <- c(75.53,74.89,76)
+ph3 <- c(80.95,83.4,83.82)
+shapiro.test(ph7)
+testab <- (rbind(ph7,ph6,ph5,ph3))
+testab$avg <- c(mean(ph7),mean(ph))
+
+endpoint01 <- read.csv('/home/woodn/Desktop/gapClosureEnd.csv.ods')
+
+
+colnames(testab)
+dunn.test::dunn.test(x=endpoint01$percent,g=endpoint01$ph,altp = T)
+
+wilcox.test(ph3,ph6,correct = 'bonferroni')
+shapiro.test(ph7)
+
+t.test(ph6,ph7)
+
+endpoint <- read.csv('/home/woodn/Desktop/gapClosureBar.csv')
+ggplot(data=endpoint) + 
+  geom_bar(aes(x=as.factor(pH),y=mean, fill=as.factor(pH)), stat='identity', color='black') + 
+  geom_errorbar(aes(x=as.factor(pH),ymin=mean-sd, ymax=mean+sd),width=0.5) + 
+  scale_fill_manual(name='pHe',values = c("#FDE725","#55C667","#287D8E","#525252")) + 
+  xlab('pHe') + 
+  ylab('Gap Closure (% Viewframe)') + 
+  ylim(0,100) + 
+  theme_woodn()
