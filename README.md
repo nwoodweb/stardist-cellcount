@@ -37,6 +37,13 @@ instructions](./install.md) or use the [StarDist provided installation](https://
 
 4. Then navigate to open the desired `.ipynb` notebook.
 
+## This Repository is Featured in These Publications
+
+1. Taherzadeh, R., Wood, N., Pei, Z., Qin, H. Establishing a Xanthan Gum–Locust Bean Gum Mucus Mimic
+for Cystic Fibrosis Models: Yield Stress and Viscoelasticity Analysis Biomimetics 2025, 10(4), 247;
+[10.3390/biomimetics10040247 ](10.3390/biomimetics10040247 )
+
+
 ## StarDist is a Program Developed by Uwe Schmidt, and Martin Weingert
 
 Please provide credit to the authors of the original StarDist program. 
