@@ -1,71 +1,159 @@
-from stardist.models import StarDist2D
-from stardist.data import test_image_nuclei_2d
-from stardist.plot import render_label
-from csbdeep.utils import normalize
+''' 
+2025 WOOD-NT contact@nwoodweb.xyz
+BSD-3 CLAUSE LICENSE
+
+This script iterates an entire directory of fluorescence
+tiff files, presumable separated into their own channels,
+and uses StarDist to count each cell nuclei in the viewframe,
+and then outputs the counts per image into separate files
+per fluorescence channel used. 
+
+RETURNS
+-------
+
+<date_experiment>-dapi-processed.csv: CSV ASCII text
+    output csv of cell nuclei counted on the dapi channel.
+    Hoechst 33342 permeates all cells, therefore counted
+    cells in this channel represents the total number of
+    cells in the image viewframe
+
+<date_experiment>-fitc-processed.csv: CSV ASCII text
+    output csv of cell nuclei counted on the fitc channel.
+    SYTOX green permeates only dead and dying cells, therefore
+    counted nuclei in this channel represents number of
+    dead cells in the same image viewframe as the corresponding
+    dapi channel.
+
+USER DEFINED PARAMETERS
+-----------------------
+
+date_experiment: string
+    date of which the experiment is conducted. This is critical
+    to avoid confusing iterations
+
+input_directory: string
+    directory where TIF files are stored
+
+model: string, default: StarDist2D.from_pretrained('2D_versatile_fluo')
+    select the included pretrained stardist model for analysis. To
+    analyze cell viability via differential nuclear flurochromes,
+    use the 2D_versatile_fluo model
+
+output_directory: string, default: "./"
+    define the directory the data csv will be written to 
+
+ph: split string
+    this is my experimental groups, it is stripped out of the 
+    filename and will need be altered to suit differences in 
+    file naming and organization
+
+time_point: split string
+    this is my time points, it is stripped out of the 
+    filename and will need be altered to suit differences in 
+    file naming and organization
+
+'''
+
+import os
+from glob import glob
+import pandas as pd
 import matplotlib.pyplot as plt
 from skimage.segmentation import find_boundaries
 from tifffile import imread
 from skimage.color import label2rgb
-import os
-from glob import glob
-import pandas as pd 
 
-'''
-Copyright (c) 2024 Nathan Wood <contact@nwoodweb.xyz>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to use,
-copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
-Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
-IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-'''
+# stardist specific libraries
+from csbdeep.utils import normalize
+from stardist.models import StarDist2D
+from stardist.data import test_image_nuclei_2d
+from stardist.plot import render_label
 
 # select 2D fluorescent nuclei model
 model = StarDist2D.from_pretrained('2D_versatile_fluo')
 
 # set input file directory and saved image directory 
-imageDirectory = os.path.expanduser("/home/woodn/Desktop/viabilityph/DAPI")
-saveDirectory = os.path.expanduser("/home/woodn/Desktop/viabilityph/counted-dapi")
-saveReadsCSV = os.path.join(saveDirectory,"dapi.out")
+input_directory = os.path.expanduser("./tiffs/")
+input_directory_dapi = os.path.join(input_directory, "*DAPI.tif")
+input_directory_fitc = os.path.join(input_directory, "*FITC.tif")
+output_directory = os.path.expanduser("./")
+date_experiment = "11-11-1111"
 
-# create dataframe
-data =  []
+output_file_dapi = date_experiment + "-dapi-processed.csv"
+output_file_fitc = date_experiment + "-fitc-processed.csv"
+output_file_dapi = os.path.join(saveDirectory,output_file_dapi)
+output_file_fitc = os.path.join(saveDirectory,output_file_fitc)
 
+# create empty dataframe
+data_dapi =  []
+data_fitc =  []
 
 # iterate each image and return cell count
-for img in sorted(glob(os.path.join(imageDirectory,"*.tif"))):
-    day = img[49:]
-    day = day[:5]
-    ph = img[45:]
-    ph = ph[:3]
+for img in sorted(glob(input_directory_dapi)):
+    '''
+    USER DEFINED PARAMETERS
+
+    These parameters strip part of the filename string to derive
+    categories that will later constitutes columns, because
+    your filename style and/or experimental groups may be different
+    you will most likely need to modify these.
+    '''
+    time_point = img[49:54]
+    ph = img[45:48]
+
+    # read image
     image = imread(img)
-    image = normalize(image,1,99.8)         # NORMALIZE FLUOR INTENSITY
+    
+    # histogram equalization
+    image = normalize(image,1,99.8)
+    
+    # segmentation via 2D fluorescence stardist model
     labels, cells = model.predict_instances(image,
         scale=1,
-        return_labels=True)             # THIS IS THE MODEL 
-    probability = list(cells["prob"])
-    n_detections = len(probability)     # THE LENGTH OF PROBABILITY VECTOR IS THE CELL COUNT
-    print('\n')
-    print(f'{img},{day},{ph},{n_detections}')     
-    data.append([day,ph,img, n_detections])    # STORE CELL COUNT WITH FILE NAME
-
-    fig, ax = plt.subplots(figsize=(15,15))
-    ax.imshow(label2rgb(labels,image=image,bg_label=0))
-    plt.axis('off')
-    plt.show()
+        return_labels=True)
     
-# Write data to TSV
-dataFrame = pd.DataFrame(data, columns = ["DAY","PH","FILENAME","COUNT"])
-dataFrame.to_csv(saveReadsCSV, sep='\t', encoding='utf-8') 
+    # the number of detected objects is length of the probabilities
+    # list
+    probability = list(cells["prob"])
+    n_detections = len(probability)
+
+    # write data into empty dataframe
+    data_dapi.append([time_point,ph,img, n_detections])
+
+# FITC 
+for img in sorted(glob(input_directory_fitc)):
+    '''
+    USER DEFINED PARAMETERS
+
+    These parameters strip part of the filename string to derive
+    categories that will later constitutes columns, because
+    your filename style and/or experimental groups may be different
+    you will most likely need to modify these.
+    '''
+    day = img[49:54]
+    ph = img[45:48]
+
+    # read image
+    image = imread(img)
+    
+    # histogram equalization
+    image = normalize(image,1,99.8)
+    
+    # segmentation via 2D fluorescence stardist model
+    labels, cells = model.predict_instances(image,
+        scale=1,
+        return_labels=True)
+    
+    # the number of detected objects is length of the probabilities
+    # list
+    probability = list(cells["prob"])
+    n_detections = len(probability)
+
+    # write data into empty dataframe
+    data_fitc.append([day,ph,img, n_detections])
+
+
+# Write data to CSV
+dataframe_dapi = pd.DataFrame(data_dapi, columns = ["DAY","PH","FILENAME","COUNT"])
+dataframe_fitc = pd.DataFrame(data_fitc, columns = ["DAY","PH","FILENAME","COUNT"])
+dataframe_dapi.to_csv(output_file_dapi, sep=',', encoding='utf-8')
+dataframe_fitc.to_csv(output_file_fitc, sep=',', encoding='utf-8')
